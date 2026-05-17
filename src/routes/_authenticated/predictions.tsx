@@ -144,37 +144,12 @@ function PredictionsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <GlassCard className="lg:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-            <div>
-              <h3 className="font-semibold">Try a what-if scenario</h3>
-              <p className="text-xs text-muted-foreground">
-                Adjust the sliders to see how each habit moves the predicted score.
-              </p>
-            </div>
-            <Select value={algo} onValueChange={(v) => setAlgo(v as Algorithm)}>
-              <SelectTrigger className="w-[220px] h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ALGORITHMS.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    <div className="flex flex-col">
-                      <span>{a.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{a.tagline}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-1">
+            <h3 className="font-semibold">Try a what-if scenario</h3>
+            <p className="text-xs text-muted-foreground">
+              Adjust the sliders to see how each habit moves the predicted score.
+            </p>
           </div>
-
-          {!model && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg bg-primary/10 border border-primary/20 p-3 text-xs">
-              <Info className="size-4 text-primary shrink-0 mt-0.5" />
-              <p className="text-muted-foreground">
-                You can predict right away using our built-in baseline.
-                Upload a dataset on the <span className="text-foreground font-medium">Dataset</span> page to train a custom model on your own students.
-              </p>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
             {FEATURE_NAMES.map((f) => {
