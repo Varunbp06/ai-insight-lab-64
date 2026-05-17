@@ -64,10 +64,17 @@ function ReportsPage() {
 
   const genExcel = async () => {
     if (!students.length) return toast.error("No data yet.");
-    const ws = XLSX.utils.json_to_sheet(students);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Students");
-    XLSX.writeFile(wb, "student-report.xlsx");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Students");
+    const keys = Object.keys(students[0] as object);
+    ws.columns = keys.map((k) => ({ header: k, key: k, width: 16 }));
+    (students as any[]).forEach((s) => ws.addRow(s));
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "student-report.xlsx";
+    a.click();
     await supabase.from("reports").insert({ owner_id: user!.id, name: "Student Performance Spreadsheet", type: "excel", payload: (summary ?? {}) as any });
     qc.invalidateQueries({ queryKey: ["reports"] });
     toast.success("Excel generated");
