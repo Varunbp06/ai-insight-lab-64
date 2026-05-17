@@ -14,7 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      predictions: {
+        Row: {
+          confidence: number
+          created_at: string
+          grade: string | null
+          id: string
+          inputs: Json
+          model: string
+          owner_id: string
+          predicted_marks: number
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          grade?: string | null
+          id?: string
+          inputs: Json
+          model: string
+          owner_id: string
+          predicted_marks: number
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          grade?: string | null
+          id?: string
+          inputs?: Json
+          model?: string
+          owner_id?: string
+          predicted_marks?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          institution: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          institution?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          institution?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          payload: Json
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          payload?: Json
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          payload?: Json
+          type?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          actual_marks: number | null
+          assignment_pct: number
+          attendance: number
+          created_at: string
+          grade: string | null
+          id: string
+          mock_test: number
+          name: string
+          owner_id: string
+          predicted_marks: number | null
+          previous_marks: number
+          sleep_hours: number
+          student_code: string
+          study_hours: number
+        }
+        Insert: {
+          actual_marks?: number | null
+          assignment_pct?: number
+          attendance?: number
+          created_at?: string
+          grade?: string | null
+          id?: string
+          mock_test?: number
+          name: string
+          owner_id: string
+          predicted_marks?: number | null
+          previous_marks?: number
+          sleep_hours?: number
+          student_code: string
+          study_hours?: number
+        }
+        Update: {
+          actual_marks?: number | null
+          assignment_pct?: number
+          attendance?: number
+          created_at?: string
+          grade?: string | null
+          id?: string
+          mock_test?: number
+          name?: string
+          owner_id?: string
+          predicted_marks?: number | null
+          previous_marks?: number
+          sleep_hours?: number
+          student_code?: string
+          study_hours?: number
+        }
+        Relationships: []
+      }
+      trained_models: {
+        Row: {
+          algorithm: string
+          created_at: string
+          id: string
+          is_active: boolean
+          metrics: Json
+          owner_id: string
+          params: Json
+        }
+        Insert: {
+          algorithm: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metrics?: Json
+          owner_id: string
+          params?: Json
+        }
+        Update: {
+          algorithm?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metrics?: Json
+          owner_id?: string
+          params?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
