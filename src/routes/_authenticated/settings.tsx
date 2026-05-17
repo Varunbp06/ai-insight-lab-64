@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { LogOut, Sun, Moon } from "lucide-react";
@@ -69,14 +68,14 @@ function SettingsPage() {
                   <div className="text-xs text-muted-foreground">{light ? "Light mode" : "Dark mode"}</div>
                 </div>
               </div>
-              <Switch checked={light} onCheckedChange={setLight} />
+              <PreferenceToggle checked={light} onCheckedChange={setLight} label="Toggle theme" />
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
               <div>
                 <div className="text-sm font-medium">Email notifications</div>
                 <div className="text-xs text-muted-foreground">Weekly performance digests</div>
               </div>
-              <Switch checked={notif} onCheckedChange={setNotif} />
+              <PreferenceToggle checked={notif} onCheckedChange={setNotif} label="Toggle email notifications" />
             </div>
             <Button variant="outline" onClick={async () => { await signOut(); navigate({ to: "/login" }); }} className="w-full text-destructive">
               <LogOut className="size-4 mr-2" />Sign out
@@ -85,5 +84,20 @@ function SettingsPage() {
         </GlassCard>
       </div>
     </div>
+  );
+}
+
+function PreferenceToggle({ checked, onCheckedChange, label }: { checked: boolean; onCheckedChange: (checked: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onCheckedChange(!checked)}
+      className={`inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${checked ? "bg-primary" : "bg-input"}`}
+    >
+      <span className={`block h-4 w-4 rounded-full bg-background shadow-lg transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
+    </button>
   );
 }
