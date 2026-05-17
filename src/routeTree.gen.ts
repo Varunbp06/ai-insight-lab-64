@@ -18,7 +18,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedPredictionsRouteImport } from './routes/_authenticated/predictions'
-import { Route as AuthenticatedModelTrainingRouteImport } from './routes/_authenticated/model-training'
 import { Route as AuthenticatedDatasetRouteImport } from './routes/_authenticated/dataset'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -68,12 +67,6 @@ const AuthenticatedPredictionsRoute =
     path: '/predictions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedModelTrainingRoute =
-  AuthenticatedModelTrainingRouteImport.update({
-    id: '/model-training',
-    path: '/model-training',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedDatasetRoute = AuthenticatedDatasetRouteImport.update({
   id: '/dataset',
   path: '/dataset',
@@ -99,7 +92,6 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/dataset': typeof AuthenticatedDatasetRoute
-  '/model-training': typeof AuthenticatedModelTrainingRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -113,7 +105,6 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/dataset': typeof AuthenticatedDatasetRoute
-  '/model-training': typeof AuthenticatedModelTrainingRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -129,7 +120,6 @@ export interface FileRoutesById {
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/dataset': typeof AuthenticatedDatasetRoute
-  '/_authenticated/model-training': typeof AuthenticatedModelTrainingRoute
   '/_authenticated/predictions': typeof AuthenticatedPredictionsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -145,7 +135,6 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/dashboard'
     | '/dataset'
-    | '/model-training'
     | '/predictions'
     | '/reports'
     | '/settings'
@@ -159,7 +148,6 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/dashboard'
     | '/dataset'
-    | '/model-training'
     | '/predictions'
     | '/reports'
     | '/settings'
@@ -174,7 +162,6 @@ export interface FileRouteTypes {
     | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
     | '/_authenticated/dataset'
-    | '/_authenticated/model-training'
     | '/_authenticated/predictions'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
@@ -254,13 +241,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPredictionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/model-training': {
-      id: '/_authenticated/model-training'
-      path: '/model-training'
-      fullPath: '/model-training'
-      preLoaderRoute: typeof AuthenticatedModelTrainingRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dataset': {
       id: '/_authenticated/dataset'
       path: '/dataset'
@@ -289,7 +269,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDatasetRoute: typeof AuthenticatedDatasetRoute
-  AuthenticatedModelTrainingRoute: typeof AuthenticatedModelTrainingRoute
   AuthenticatedPredictionsRoute: typeof AuthenticatedPredictionsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -299,7 +278,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDatasetRoute: AuthenticatedDatasetRoute,
-  AuthenticatedModelTrainingRoute: AuthenticatedModelTrainingRoute,
   AuthenticatedPredictionsRoute: AuthenticatedPredictionsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

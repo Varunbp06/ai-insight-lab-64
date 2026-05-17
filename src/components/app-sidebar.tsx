@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Sparkles, Database, BarChart3, FileText, Brain, Settings, GraduationCap, LogOut,
+  LayoutDashboard, Sparkles, Database, BarChart3, FileText, Settings, GraduationCap, LogOut,
 } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,6 @@ const NAV = [
   { to: "/dataset", label: "Dataset", icon: Database },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileText },
-  { to: "/model-training", label: "Model Training", icon: Brain },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
