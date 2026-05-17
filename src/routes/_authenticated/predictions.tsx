@@ -53,7 +53,7 @@ function PredictionsPage() {
     setLoading(true);
     const marks = predict(model.trained, vectorize(inputs));
     const confidence = Math.max(0.5, Math.min(0.99, model.m.r2));
-    await supabase.from("predictions").insert({ model: algo, inputs, predicted_marks: marks, confidence, grade: gradeFor(marks) });
+    await supabase.from("predictions").insert({ owner_id: user!.id, model: algo, inputs: inputs as any, predicted_marks: marks, confidence, grade: gradeFor(marks) });
     qc.invalidateQueries({ queryKey: ["predictions"] });
     setLoading(false);
     toast.success(`Predicted ${marks.toFixed(1)}/100 — Grade ${gradeFor(marks)}`);

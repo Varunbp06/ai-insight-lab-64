@@ -129,8 +129,9 @@ function Dashboard() {
     const marks = predict(model, vectorize(inputs));
     const confidence = modelMetrics ? Math.max(0.5, Math.min(0.99, modelMetrics.r2)) : 0.75;
     setPrediction({ marks, grade: gradeFor(marks), confidence });
+    const { data: u } = await supabase.auth.getUser();
     await supabase.from("predictions").insert({
-      model: algo, inputs, predicted_marks: marks, confidence, grade: gradeFor(marks),
+      owner_id: u.user!.id, model: algo, inputs: inputs as any, predicted_marks: marks, confidence, grade: gradeFor(marks),
     });
     setPredicting(false);
     toast.success(`Predicted ${marks.toFixed(0)}/100 (${gradeFor(marks)})`);

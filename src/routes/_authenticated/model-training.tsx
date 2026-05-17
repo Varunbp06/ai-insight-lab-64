@@ -55,7 +55,7 @@ function TrainingPage() {
       setProgress((prev) => ({ ...prev, [a.id]: 100 }));
       setResults((prev) => ({ ...prev, [a.id]: m }));
       append(`✓ ${a.label} — RMSE ${m.rmse.toFixed(2)} • R² ${m.r2.toFixed(3)} • MAE ${m.mae.toFixed(2)}`);
-      await supabase.from("trained_models").insert({ algorithm: a.id, metrics: m, params: {} });
+      await supabase.from("trained_models").insert({ owner_id: user!.id, algorithm: a.id, metrics: m as any, params: {} });
     }
     append("All models trained and saved.");
     qc.invalidateQueries({ queryKey: ["models"] });

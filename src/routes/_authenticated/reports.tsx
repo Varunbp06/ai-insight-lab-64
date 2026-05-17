@@ -57,7 +57,7 @@ function ReportsPage() {
       headStyles: { fillColor: [120, 80, 220] },
     });
     doc.save("student-report.pdf");
-    await supabase.from("reports").insert({ name: "Student Performance Report", type: "pdf", payload: summary ?? {} });
+    await supabase.from("reports").insert({ owner_id: user!.id, name: "Student Performance Report", type: "pdf", payload: (summary ?? {}) as any });
     qc.invalidateQueries({ queryKey: ["reports"] });
     toast.success("PDF generated");
   };
@@ -68,7 +68,7 @@ function ReportsPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
     XLSX.writeFile(wb, "student-report.xlsx");
-    await supabase.from("reports").insert({ name: "Student Performance Spreadsheet", type: "excel", payload: summary ?? {} });
+    await supabase.from("reports").insert({ owner_id: user!.id, name: "Student Performance Spreadsheet", type: "excel", payload: (summary ?? {}) as any });
     qc.invalidateQueries({ queryKey: ["reports"] });
     toast.success("Excel generated");
   };
