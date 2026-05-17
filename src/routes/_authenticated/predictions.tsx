@@ -222,8 +222,6 @@ function PredictionsPage() {
                       <span className="text-[11px] text-muted-foreground ml-1 font-normal">/100</span>
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-1">
-                      {ALGORITHMS.find((a) => a.id === p.model)?.label ?? p.model}
-                      {" • "}
                       {formatDistanceToNow(new Date(p.created_at), { addSuffix: true })}
                     </div>
                   </div>
