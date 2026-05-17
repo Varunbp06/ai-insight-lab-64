@@ -37,7 +37,7 @@ export function AppSidebar() {
         <div className="leading-tight">
           <div className="font-semibold text-foreground truncate">{profile?.full_name ?? user?.email?.split("@")[0] ?? "Student"}</div>
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            {profile?.role ?? "Performance Analytics"}
+            Performance Analytics
           </div>
         </div>
       </div>
