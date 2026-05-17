@@ -4,7 +4,6 @@ import { FileText, Download, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import ExcelJS from "exceljs";
 import { GlassCard } from "@/components/glass-card";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -64,6 +63,7 @@ function ReportsPage() {
 
   const genExcel = async () => {
     if (!students.length) return toast.error("No data yet.");
+    const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("Students");
     const keys = Object.keys(students[0] as object);
