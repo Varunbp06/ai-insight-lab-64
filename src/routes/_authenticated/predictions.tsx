@@ -1,55 +1,89 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Sparkles, Loader2, Trash2, Lightbulb, TrendingUp, Info } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Loader2, Trash2, Lightbulb, TrendingUp } from "lucide-react";
 import { GlassCard } from "@/components/glass-card";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
-import {
-  ALGORITHMS, FEATURE_NAMES, FEATURE_LABELS, gradeFor, metrics, predict,
-  trainModel, vectorize, type Algorithm, type FeatureVector,
-} from "@/lib/ml";
+import { FEATURE_NAMES, FEATURE_LABELS, gradeFor, type FeatureVector } from "@/lib/ml";
 import { FEATURE_INPUT_RANGES } from "@/lib/seed";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/predictions")({ component: PredictionsPage });
 
-// A small built-in baseline so the page always works, even before any dataset is uploaded.
-// Weights come from typical academic studies on the same features (sum ≈ 1).
-const BASELINE_WEIGHTS: Record<string, number> = {
-  study_hours: 2.6,      // per hour/day
-  attendance: 0.35,      // per % point
-  sleep_hours: 1.4,      // per hour, peaks ~7h
-  previous_marks: 0.45,  // per mark
-  assignment_pct: 0.25,  // per % point
-  mock_test: 0.30,       // per mark
+// Each feature contributes a 0–100 sub-score based on how favourable it is.
+// Weights sum to 1.0 so the final result is naturally bounded.
+const WEIGHTS: Record<string, number> = {
+  study_hours: 0.20,
+  attendance: 0.20,
+  sleep_hours: 0.10,
+  previous_marks: 0.15,
+  assignment_pct: 0.15,
+  mock_test: 0.20,
 };
-function baselinePredict(v: FeatureVector): number {
-  let s = 8; // base
-  s += BASELINE_WEIGHTS.study_hours * v.study_hours;
-  s += BASELINE_WEIGHTS.attendance * v.attendance;
-  s += BASELINE_WEIGHTS.sleep_hours * (10 - Math.abs(7 - v.sleep_hours) * 2); // sweet spot ~7h
-  s += BASELINE_WEIGHTS.previous_marks * v.previous_marks;
-  s += BASELINE_WEIGHTS.assignment_pct * v.assignment_pct;
-  s += BASELINE_WEIGHTS.mock_test * v.mock_test;
-  return Math.max(0, Math.min(100, s / 1.8));
+
+const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
+
+function subScore(name: string, v: number): number {
+  switch (name) {
+    case "study_hours":
+      // Optimal around 6h/day. Diminishing returns past 8h, harsh penalty past 10h.
+      if (v <= 0) return 0;
+      if (v <= 6) return clamp((v / 6) * 90);
+      if (v <= 8) return clamp(90 + (v - 6) * 5);
+      return clamp(100 - (v - 8) * 8);
+    case "sleep_hours":
+      // Peak at 7h. Both too little and too much hurt.
+      return clamp(100 - Math.abs(7 - v) * 14);
+    case "attendance":
+    case "previous_marks":
+    case "assignment_pct":
+    case "mock_test":
+      return clamp(v); // already on a 0–100 scale
+    default:
+      return 0;
+  }
+}
+
+function computePrediction(inputs: FeatureVector): { marks: number; confidence: number } {
+  let total = 0;
+  let weightSum = 0;
+  for (const k of FEATURE_NAMES) {
+    const s = subScore(k, Number(inputs[k]) || 0);
+    total += s * WEIGHTS[k];
+    weightSum += WEIGHTS[k];
+  }
+  const marks = clamp(total / weightSum);
+  // Confidence: higher when inputs are within typical ranges.
+  const inRange = FEATURE_NAMES.filter((k) => {
+    const r = FEATURE_INPUT_RANGES[k];
+    return inputs[k] >= r.min && inputs[k] <= r.max;
+  }).length;
+  const confidence = 0.65 + (inRange / FEATURE_NAMES.length) * 0.3;
+  return { marks: +marks.toFixed(1), confidence: +confidence.toFixed(2) };
 }
 
 function tipFor(inputs: FeatureVector): string {
-  if (inputs.attendance < 70) return "Attendance is the single biggest lever — aim for 85%+ to see a clear lift.";
-  if (inputs.study_hours < 3) return "Try adding 1–2 focused study hours per day. Consistency beats long cramming sessions.";
-  if (inputs.sleep_hours < 6 || inputs.sleep_hours > 9) return "Sleep around 7 hours. Both too little and too much hurt recall and focus.";
-  if (inputs.assignment_pct < 70) return "Closing assignment gaps is low-effort, high-reward — they compound into the final grade.";
-  if (inputs.mock_test < 60) return "Mock tests predict the real thing — practice one full paper this week under timed conditions.";
-  if (inputs.previous_marks < 60) return "Past marks weigh in, but momentum matters more. A strong next test resets the trend.";
-  return "Solid inputs across the board. Keep the routine steady and review weak topics weekly.";
+  // Find the weakest sub-score and coach that.
+  const scored = FEATURE_NAMES.map((k) => ({ k, s: subScore(k, inputs[k]) }))
+    .sort((a, b) => a.s - b.s);
+  const worst = scored[0];
+  if (worst.s >= 75) return "Solid inputs across the board. Keep the routine steady and review weak topics weekly.";
+  const tips: Record<string, string> = {
+    attendance: "Attendance is the biggest lever — aim for 85%+ to see a clear lift.",
+    study_hours: "Try adding 1–2 focused study hours per day. Consistency beats long cramming sessions.",
+    sleep_hours: "Sleep around 7 hours. Both too little and too much hurt recall and focus.",
+    assignment_pct: "Closing assignment gaps is low-effort, high-reward — they compound into the final grade.",
+    mock_test: "Mock tests predict the real thing — practice one full paper this week under timed conditions.",
+    previous_marks: "Past marks weigh in, but momentum matters more. A strong next test resets the trend.",
+  };
+  return tips[worst.k];
 }
 
 const gradeColor = (g: string) =>
@@ -61,7 +95,6 @@ const gradeColor = (g: string) =>
 function PredictionsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [algo, setAlgo] = useState<Algorithm>("xgboost");
   const [inputs, setInputs] = useState<FeatureVector>(() => {
     const o = {} as FeatureVector;
     FEATURE_NAMES.forEach((k) => (o[k] = FEATURE_INPUT_RANGES[k].default));
@@ -70,40 +103,17 @@ function PredictionsPage() {
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState<{ marks: number; grade: string; confidence: number } | null>(null);
 
-  const { data: students = [] } = useQuery({
-    queryKey: ["students", user?.id], enabled: !!user,
-    queryFn: async () => (await supabase.from("students").select("*")).data ?? [],
-  });
   const { data: history = [] } = useQuery({
     queryKey: ["predictions", user?.id], enabled: !!user,
     queryFn: async () => (await supabase.from("predictions").select("*").order("created_at", { ascending: false }).limit(20)).data ?? [],
   });
 
-  // Train once per (students, algo) — previously trained twice in the same memo.
-  const model = useMemo(() => {
-    if (students.length < 5) return null;
-    const X = students.map((s: any) => vectorize(s));
-    const y = students.map((s: any) => Number(s.actual_marks ?? 0));
-    const trained = trainModel(algo, X, y);
-    const m = metrics(y, X.map((x) => predict(trained, x)));
-    return { trained, m };
-  }, [students, algo]);
-
   const onPredict = async () => {
     setLoading(true);
-    let marks: number;
-    let confidence: number;
-    if (model) {
-      marks = predict(model.trained, vectorize(inputs));
-      confidence = Math.max(0.55, Math.min(0.98, model.m.r2));
-    } else {
-      // Friendly fallback — works on day one, before any data exists.
-      marks = baselinePredict(inputs);
-      confidence = 0.72;
-    }
+    const { marks, confidence } = computePrediction(inputs);
     const grade = gradeFor(marks);
     await supabase.from("predictions").insert({
-      owner_id: user!.id, model: algo, inputs: inputs as any,
+      owner_id: user!.id, model: "weighted", inputs: inputs as any,
       predicted_marks: marks, confidence, grade,
     });
     qc.invalidateQueries({ queryKey: ["predictions"] });
@@ -134,37 +144,12 @@ function PredictionsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <GlassCard className="lg:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-            <div>
-              <h3 className="font-semibold">Try a what-if scenario</h3>
-              <p className="text-xs text-muted-foreground">
-                Adjust the sliders to see how each habit moves the predicted score.
-              </p>
-            </div>
-            <Select value={algo} onValueChange={(v) => setAlgo(v as Algorithm)}>
-              <SelectTrigger className="w-[220px] h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ALGORITHMS.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    <div className="flex flex-col">
-                      <span>{a.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{a.tagline}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-1">
+            <h3 className="font-semibold">Try a what-if scenario</h3>
+            <p className="text-xs text-muted-foreground">
+              Adjust the sliders to see how each habit moves the predicted score.
+            </p>
           </div>
-
-          {!model && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg bg-primary/10 border border-primary/20 p-3 text-xs">
-              <Info className="size-4 text-primary shrink-0 mt-0.5" />
-              <p className="text-muted-foreground">
-                You can predict right away using our built-in baseline.
-                Upload a dataset on the <span className="text-foreground font-medium">Dataset</span> page to train a custom model on your own students.
-              </p>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
             {FEATURE_NAMES.map((f) => {
@@ -237,8 +222,6 @@ function PredictionsPage() {
                       <span className="text-[11px] text-muted-foreground ml-1 font-normal">/100</span>
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-1">
-                      {ALGORITHMS.find((a) => a.id === p.model)?.label ?? p.model}
-                      {" • "}
                       {formatDistanceToNow(new Date(p.created_at), { addSuffix: true })}
                     </div>
                   </div>
